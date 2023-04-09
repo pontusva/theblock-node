@@ -1,11 +1,15 @@
 const express = require('express');
-const Model = require('../model/model');
+const Model = require('../model/Model');
 var cors = require('cors');
 const router = express.Router();
+const jwt = require('jsonwebtoken');
+require('dotenv').config();
+
+const jwtSecret = process.env.JWT_SECRET;
 
 var corsOptions = {
   origin: true,
-  methods: ['POST'],
+  methods: ['POST', 'GET'],
   optionsSuccessStatus: 200, // some legacy browsers (IE11, various SmartTVs) choke on 204
 };
 
@@ -24,9 +28,9 @@ router.post('/post', cors(corsOptions), async (req, res) => {
 });
 
 //Get all Method
-router.get('/getAll', cors(), async (req, res) => {
+router.get('/getAll', cors(corsOptions), async (req, res) => {
   try {
-    const data = await Model.find();
+    const data = await Model.find().sort({ date: 1 });
     res.json(data);
   } catch (error) {
     res.status(500).json({ message: error.message });

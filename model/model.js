@@ -6,6 +6,13 @@ const dataSchema = new mongoose.Schema({
     type: String,
     unique: true,
   },
+  role: {
+    type: String,
+    default: 'Admin',
+    required: true,
+  },
 });
 
-module.exports = mongoose.model('Data', dataSchema);
+const Dates = mongoose.model('Data', dataSchema);
+
+module.exports = Dates;

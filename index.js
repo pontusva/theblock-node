@@ -2,6 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const routes = require('./routes/routes');
 require('dotenv').config();
+const cookieParser = require('cookie-parser');
 const mongoUri = process.env.ATLAS_URI;
 
 const cors = require('cors');
@@ -33,6 +34,7 @@ database.once('connected', () => {
 const app = express();
 
 app.use(express.json());
+app.use(cookieParser());
 app.use('/api', cors(), routes);
 
 app.use(cors(corsOptions)); // Use this after the variable declaration
