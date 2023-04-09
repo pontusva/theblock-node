@@ -1,5 +1,5 @@
 const express = require('express');
-const Model = require('../model/Model');
+const Model = require('../model/model');
 var cors = require('cors');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
