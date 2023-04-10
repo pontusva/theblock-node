@@ -14,17 +14,21 @@ var corsOptions = {
 };
 
 //Post Method
-router.post('/post', cors(corsOptions), async (req, res) => {
-  const data = new Model({
-    date: req.body.date,
+router.post('/post', cors(), async (req, res) => {
+  const { date } = req.body;
+  await Model.create({
+    date,
+  }).then((user) => {
+    const maxAge = 3 * 60 * 60;
+    const token = jwt.sign({ date }, jwtSecret, {});
+    res.cookie('jwt', token, {
+      httpOnly: true,
+    });
+    res.json({
+      token,
+      user,
+    });
   });
-
-  try {
-    const dataToSave = await data.save();
-    res.status(200).json(dataToSave);
-  } catch (error) {
-    res.status(400).json({ message: error });
-  }
 });
 
 //Get all Method

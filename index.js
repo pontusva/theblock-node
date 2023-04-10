@@ -10,7 +10,8 @@ const PORT = process.env.PORT || 3000;
 const corsOptions = {
   origin: '*',
   credentials: true, //access-control-allow-credentials:true
-  optionSuccessStatus: 200,
+  Connection: 'keep-alive',
+  methods: ['POST', 'GET'],
 };
 
 //express
@@ -35,12 +36,12 @@ const app = express();
 
 app.use(express.json());
 app.use(cookieParser());
-app.use('/api', cors(), routes);
+app.use('/api', cors(corsOptions), routes);
 
 app.use(cors(corsOptions)); // Use this after the variable declaration
 
 connectDB().then(() => {
   app.listen(PORT, () => {
-    console.log(`Server Started at ${3000}`);
+    console.log(`Server Started at ${PORT}`);
   });
 });
