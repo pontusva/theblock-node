@@ -1,11 +1,15 @@
 const express = require('express');
+const app = express();
+const router = express.Router();
 const mongoose = require('mongoose');
 const routes = require('./routes/routes');
 require('dotenv').config();
 const cookieParser = require('cookie-parser');
 const mongoUri = process.env.ATLAS_URI;
-
+const User = require('./model/User');
 const cors = require('cors');
+const DateDB = require('./model/date');
+const UserDB = require('./model/User');
 const PORT = process.env.PORT || 3000;
 const corsOptions = {
   origin: '*',
@@ -13,30 +17,75 @@ const corsOptions = {
   Connection: 'keep-alive',
   methods: ['POST', 'GET'],
 };
-
+// console.log(DateDB);
+console.log(UserDB);
 //express
 
+app.use(cookieParser());
+app.use(express.json());
+app.use('/api', cors(corsOptions), routes);
 // mongo connection
 // mongoose.connect(mongoUri);
 
 const connectDB = async () => {
-  mongoose.connect(mongoUri);
+  mongoose.createConnection(
+    'mongodb+srv://pontus:pg66ZAc9jvnYqdzP@plants.vohijne.mongodb.net/blockink'
+  ); // dates
+  mongoose.createConnection(
+    'mongodb+srv://pontus:pg66ZAc9jvnYqdzP@plants.vohijne.mongodb.net/logintest'
+  );
 };
-const database = mongoose.connection;
 
-database.on('error', (error) => {
+const db = mongoose.connection;
+// console.log(db);
+const dateDatabase = mongoose.createConnection(
+  'mongodb+srv://pontus:pg66ZAc9jvnYqdzP@plants.vohijne.mongodb.net/logintest'
+);
+
+const loginDatabase = mongoose.createConnection(
+  'mongodb+srv://pontus:pg66ZAc9jvnYqdzP@plants.vohijne.mongodb.net/logintest'
+);
+
+// const dbModeldate = dateDatabase.model('login', require('./model/modelSchema'));
+
+// const dbModelUser = loginDatabase.model(
+//   'login',
+//   require('./model/loginSchema')
+// );
+
+dateDatabase.on('error', (error) => {
   console.log(error);
 });
 
-database.once('connected', () => {
+dateDatabase.once('connected', () => {
   console.log('Database Connected');
 });
 
-const app = express();
+loginDatabase.on('error', (error) => {
+  console.log(error);
+});
 
-app.use(express.json());
-app.use(cookieParser());
-app.use('/api', cors(corsOptions), routes);
+loginDatabase.once('connected', () => {
+  console.log('Database Connected');
+});
+
+// funkar
+app.post('/test', async (req, res) => {
+  console.log(req.body);
+  const { username } = req.body;
+  res.send('Post User API');
+  await User.create({
+    username,
+  });
+});
+
+app.get('/', function (req, res) {
+  // Cookies that have not been signed
+  console.log('Cookies: ', req.cookies);
+
+  // Cookies that have been signed
+  console.log('Signed Cookies: ', req.signedCookies);
+});
 
 app.use(cors(corsOptions)); // Use this after the variable declaration
 

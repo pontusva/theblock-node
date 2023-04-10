@@ -1,18 +1,18 @@
-const mongoose = require('mongoose');
+// const mongoose = require('mongoose');
 
-const dataSchema = new mongoose.Schema({
-  date: {
-    // required: true,
-    type: String,
-    unique: true,
-  },
-  role: {
-    type: String,
-    default: 'Admin',
-    required: true,
-  },
-});
+// const dataSchema = new mongoose.Schema({
+//   date: {
+//     required: true,
+//     type: String,
+//     unique: true,
+//   },
+//   role: {
+//     type: String,
+//     default: 'Admin',
+//     required: true,
+//   },
+// });
 
-const Dates = mongoose.model('Data', dataSchema);
+// const User = mongoose.model('Dates', dataSchema);
 
-module.exports = Dates;
+// module.exports = User;
