@@ -21,6 +21,9 @@ const corsOptions = {
 console.log(UserDB);
 //express
 
+const blockinkURI = process.env.ATLAS_URI_BLOCKINK;
+const userURI = process.env.ATLAS_URI_LOGINTEST;
+
 app.use(cookieParser());
 app.use(express.json());
 app.use('/api', cors(corsOptions), routes);
@@ -28,23 +31,15 @@ app.use('/api', cors(corsOptions), routes);
 // mongoose.connect(mongoUri);
 
 const connectDB = async () => {
-  mongoose.createConnection(
-    'mongodb+srv://pontus:pg66ZAc9jvnYqdzP@plants.vohijne.mongodb.net/blockink'
-  ); // dates
-  mongoose.createConnection(
-    'mongodb+srv://pontus:pg66ZAc9jvnYqdzP@plants.vohijne.mongodb.net/logintest'
-  );
+  mongoose.createConnection(blockinkURI); // dates
+  mongoose.createConnection(userURI);
 };
 
 const db = mongoose.connection;
 // console.log(db);
-const dateDatabase = mongoose.createConnection(
-  'mongodb+srv://pontus:pg66ZAc9jvnYqdzP@plants.vohijne.mongodb.net/logintest'
-);
+const dateDatabase = mongoose.createConnection(blockinkURI);
 
-const loginDatabase = mongoose.createConnection(
-  'mongodb+srv://pontus:pg66ZAc9jvnYqdzP@plants.vohijne.mongodb.net/logintest'
-);
+const loginDatabase = mongoose.createConnection(userURI);
 
 // const dbModeldate = dateDatabase.model('login', require('./model/modelSchema'));
 
