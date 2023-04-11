@@ -1,12 +1,12 @@
 const Mongoose = require('mongoose');
+require('dotenv').config();
+const userURI = process.env.ATLAS_URI_LOGINTEST;
 
-const loginDatabase = Mongoose.createConnection(
-  'mongodb+srv://pontus:pg66ZAc9jvnYqdzP@plants.vohijne.mongodb.net/logintest'
-);
-
+const loginDatabase = Mongoose.createConnection(userURI);
 const dbModelUser = loginDatabase.model(
-  'login',
-  require('../schemas/loginSchema')
+  'register',
+  require('../schemas/RegisterSchema') // loginSchema
 );
+// console.log(dbModelUser);
 
 module.exports = dbModelUser;

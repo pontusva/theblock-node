@@ -6,10 +6,13 @@ const dataSchema = new mongoose.Schema({
     type: String,
     unique: true,
   },
-  role: {
-    type: String,
-    default: 'Admin',
+  firstName: {
     required: true,
+    type: String,
+  },
+  lastName: {
+    required: true,
+    type: String,
   },
 });
 

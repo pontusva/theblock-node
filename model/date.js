@@ -1,12 +1,11 @@
 const Mongoose = require('mongoose');
-
-const dateDatabase = Mongoose.createConnection(
-  'mongodb+srv://pontus:pg66ZAc9jvnYqdzP@plants.vohijne.mongodb.net/blockink'
-);
+require('dotenv').config();
+const blockinkURI = process.env.ATLAS_URI_BLOCKINK;
+const dateDatabase = Mongoose.createConnection(blockinkURI);
 
 const dbModeldate = dateDatabase.model(
   'dates',
-  require('../schemas/UserSchema')
+  require('../schemas/DateSchema')
 );
 
 module.exports = dbModeldate;

@@ -2,6 +2,7 @@ const express = require('express');
 const Date = require('../model/date');
 const User = require('../model/User');
 var cors = require('cors');
+const bcrypt = require('bcryptjs');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
 const { adminAuth } = require('../middleware/auth');
@@ -19,9 +20,11 @@ var corsOptions = {
 
 //Post Method
 router.post('/post', cors(), async (req, res) => {
-  const { date } = req.body;
+  const { date, firstName, lastName } = req.body;
   await Date.create({
     date,
+    firstName,
+    lastName,
   }).then((user) => {
     const token = jwt.sign({ date }, jwtSecret, {});
     res.cookie('jwt', token, {
@@ -34,37 +37,126 @@ router.post('/post', cors(), async (req, res) => {
   });
 });
 
-// const adminAuth = (req, res, next) => {
-// // const token = req.cookies;
-// const authHeader = req.headers['authorization'];
-// const token = authHeader && authHeader.split(' ')[1];
-// console.log(authHeader);
-// jwt.verify(token, jwtSecret, (err, decodedToken) => {
-//   // console.log(req.cookies.jwt);
-//   // console.log(err);
-//   // res.send(jwtSecret)
-//   console.log(decodedToken);
-//   if (token) {
-//     if (err) {
-//       return res.status(401).json({ message: 'Not authorized' });
-//     } else {
-//       if (decodedToken.role !== 'admin') {
-//         return res.status(401).json({ message: 'Not1 authorized' });
-//       } else {
-//         next();
-//       }
-//     }
-//   }
-// });
-// };
-
 //Get all Method
 router.get('/getAll', cors(corsOptions), adminAuth, async (req, res) => {
   try {
-    const data = await User.find().sort({ date: 1 });
+    const data = await User.find().sort({ username: 1 });
     res.json(data);
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+});
+
+router.get('/dates', cors(corsOptions), async (req, res) => {
+  try {
+    const data = await Date.find().sort({ date: 1 });
+    res.json(data.map((date) => date.date));
+    // console.log(data.map((date) => date.date));
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+router.get('/adminDates', cors(corsOptions), adminAuth, async (req, res) => {
+  try {
+    const data = await Date.find().sort({ date: 1 });
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+router.post('/register', cors(corsOptions), async (req, res) => {
+  const { username, password, role, firstName, lastName } = req.body;
+  console.log(req.body);
+  if (password.length < 6) {
+    return res.status(400).json({ message: 'Password less than 6 characters' });
+  }
+  bcrypt.hash(password, 10).then(async (hash) => {
+    await User.create({
+      username,
+      password: hash,
+      role,
+      firstName,
+      lastName,
+    })
+      .then((user) => {
+        const maxAge = 3 * 60 * 60;
+        const token = jwt.sign(
+          { id: user._id, username, role: user.role },
+          jwtSecret,
+          {
+            expiresIn: maxAge, // 3hrs in sec
+          }
+        );
+        res.cookie('jwt', token, {
+          httpOnly: true,
+          maxAge: maxAge * 1000, // 3hrs in ms
+        });
+        res.json({
+          token,
+          user,
+        });
+        // res.status(201).json({
+        //   message: 'User successfully created',
+        //   user: user._id,
+        // });
+      })
+      .catch((error) =>
+        res.status(400).json({
+          message: 'User not successful created',
+          error: error.message,
+        })
+      );
+  });
+});
+
+router.post('/login', cors(corsOptions), async (req, res) => {
+  const { username, password } = req.body;
+  // Check if username and password is provided
+  if (!username || !password) {
+    return res.status(400).json({
+      message: 'Username or Password not present',
+    });
+  }
+  try {
+    const user = await User.findOne({ username });
+    console.log(user);
+    if (!user) {
+      res.status(400).json({
+        message: 'Login not successful',
+        error: 'User not found',
+      });
+    } else {
+      // comparing given password with hashed password
+      bcrypt.compare(password, user.password).then(function (result) {
+        if (result) {
+          const maxAge = 3 * 60 * 60;
+          const token = jwt.sign({ id: user.id, role: user.role }, jwtSecret, {
+            expiresIn: maxAge, // 3hrs in sec
+          });
+          res.cookie('jwt', token, {
+            httpOnly: true,
+            maxAge: maxAge * 1000, // 3hrs in ms
+          });
+          res.json({
+            token,
+            user,
+          });
+          // res.status(201).json({
+          //   message: 'User successfully Logged in',
+          //   user: user._id,
+          // });
+        } else {
+          res.status(400).json({ message: 'Login not succesful' });
+        }
+      });
+    }
+  } catch (error) {
+    res.status(400).json({
+      message: 'An error occurred',
+      error: error.message,
+    });
   }
 });
 
@@ -72,22 +164,18 @@ router.post('/users', cors(corsOptions), async (req, res) => {
   // console.log(req.body);
   // res.send(req.body);
   try {
-    const { username, role } = req.body;
-    console.log(username, role);
+    const { username, role, age } = req.body;
+    // console.log(username, role, age);
     await User.create({
       username,
+      role,
+      age,
     }).then((user) => {
       const token = jwt.sign({ role }, jwtSecret, {});
-      res.send(token);
-      console.log(token);
-      console.log(user);
       res.cookie('jwt', token, {
         httpOnly: true,
       });
-      res.json({
-        token,
-        user,
-      });
+      res.status(200).json({ token, role });
     });
   } catch {
     (error) => {

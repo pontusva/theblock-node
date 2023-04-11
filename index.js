@@ -1,11 +1,9 @@
 const express = require('express');
 const app = express();
-const router = express.Router();
 const mongoose = require('mongoose');
 const routes = require('./routes/routes');
 require('dotenv').config();
 const cookieParser = require('cookie-parser');
-const mongoUri = process.env.ATLAS_URI;
 const User = require('./model/User');
 const cors = require('cors');
 const DateDB = require('./model/date');
@@ -40,13 +38,6 @@ const db = mongoose.connection;
 const dateDatabase = mongoose.createConnection(blockinkURI);
 
 const loginDatabase = mongoose.createConnection(userURI);
-
-// const dbModeldate = dateDatabase.model('login', require('./model/modelSchema'));
-
-// const dbModelUser = loginDatabase.model(
-//   'login',
-//   require('./model/loginSchema')
-// );
 
 dateDatabase.on('error', (error) => {
   console.log(error);
