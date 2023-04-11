@@ -50,7 +50,7 @@ router.get('/getAll', cors(corsOptions), adminAuth, async (req, res) => {
 router.get('/dates', cors(corsOptions), async (req, res) => {
   try {
     const data = await Date.find().sort({ date: 1 });
-    res.json(data.map((date) => date.date));
+    res.json(data);
     // console.log(data.map((date) => date.date));
   } catch (error) {
     res.status(500).json({ message: error.message });
