@@ -1,10 +1,13 @@
 const express = require('express');
 const Date = require('../model/date');
 const User = require('../model/User');
+const FirstContact = require('../model/FirstContact');
 var cors = require('cors');
 const bcrypt = require('bcryptjs');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
+const { Storage } = require('@google-cloud/storage');
+const Multer = require('multer');
 const { adminAuth } = require('../middleware/auth');
 
 const { postUser, getUser } = require('./Auth');
@@ -18,6 +21,70 @@ var corsOptions = {
   optionsSuccessStatus: 200, // some legacy browsers (IE11, various SmartTVs) choke on 204
 };
 
+// Google CLoud Storage
+const multer = Multer({
+  storage: Multer.memoryStorage(),
+  limits: {
+    fileSize: 5 * 1024 * 1024, // No larger than 5mb, change as you need
+  },
+});
+let projectId = 'theblock-383510'; // Get this from Google Cloud
+let keyFilename = 'theblock.json'; // Get this from Google Cloud -> Credentials -> Service Accounts
+const storage = new Storage({
+  projectId,
+  keyFilename,
+});
+const bucket = storage.bucket('blockcustomerpicutres'); // Get this from Google Cloud -> Storage
+
+router.post('/firstcontact', async (req, res) => {
+  const { firstName, lastName, phoneNumber, email } = req.body;
+  await FirstContact.create({
+    firstName,
+    lastName,
+    phoneNumber,
+    email,
+  });
+  res.json({
+    message: 'Success',
+  });
+});
+
+router.get('/postimage', async (req, res) => {
+  try {
+    const [files] = await bucket.getFiles();
+    const objectNames = files.map((file) => file.id);
+    res.send(objectNames);
+    console.log('Success');
+  } catch (error) {
+    res.send('Error:' + error);
+  }
+});
+
+router.post(
+  '/postimage',
+  cors(corsOptions),
+  multer.single('imgfile'),
+  (req, res) => {
+    try {
+      if (req.file) {
+        console.log('File found, trying to upload...');
+        const blob = bucket.file(req.file.originalname);
+        const blobStream = blob.createWriteStream();
+
+        blobStream.on('finish', () => {
+          res.status(200).send(req.file.originalname);
+          console.log('Success');
+        });
+        blobStream.end(req.file.buffer);
+      } else throw 'error with img';
+    } catch (error) {
+      res.status(500).send(error);
+    }
+  }
+);
+
+// google cloud storage
+
 //Post Method
 router.post('/post', cors(), async (req, res) => {
   const { date, firstName, lastName } = req.body;
@@ -26,12 +93,12 @@ router.post('/post', cors(), async (req, res) => {
     firstName,
     lastName,
   }).then((user) => {
-    const token = jwt.sign({ date }, jwtSecret, {});
-    res.cookie('jwt', token, {
-      httpOnly: true,
-    });
+    // const token = jwt.sign({ date }, jwtSecret, {});
+    // res.cookie('jwt', token, {
+    //   httpOnly: true,
+    // });
     res.json({
-      token,
+      // token,
       user,
     });
   });
@@ -50,7 +117,16 @@ router.get('/getAll', cors(corsOptions), adminAuth, async (req, res) => {
 router.get('/dates', cors(corsOptions), async (req, res) => {
   try {
     const data = await Date.find().sort({ date: 1 });
-    res.json(data);
+    res.json(
+      data.map((date) => {
+        const d = {
+          date: date.date,
+          id: date._id,
+        };
+        return d;
+      })
+    );
+    console.log(data);
     // console.log(data.map((date) => date.date));
   } catch (error) {
     res.status(500).json({ message: error.message });
