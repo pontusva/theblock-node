@@ -8,7 +8,7 @@ const router = express.Router();
 const jwt = require('jsonwebtoken');
 const { Storage } = require('@google-cloud/storage');
 const Multer = require('multer');
-const { adminAuth } = require('../middleware/auth');
+const { adminAuth, loginAuth } = require('../middleware/auth');
 
 const { postUser, getUser } = require('./Auth');
 require('dotenv').config();
@@ -87,11 +87,12 @@ router.post(
 
 //Post Method
 router.post('/post', cors(), async (req, res) => {
-  const { date, firstName, lastName } = req.body;
+  const { date, firstName, lastName, token } = req.body;
   await Date.create({
     date,
     firstName,
     lastName,
+    token,
   }).then((user) => {
     // const token = jwt.sign({ date }, jwtSecret, {});
     // res.cookie('jwt', token, {
@@ -126,7 +127,7 @@ router.get('/dates', cors(corsOptions), async (req, res) => {
         return d;
       })
     );
-    console.log(data);
+    // console.log(data);
     // console.log(data.map((date) => date.date));
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -144,7 +145,7 @@ router.get('/adminDates', cors(corsOptions), adminAuth, async (req, res) => {
 
 router.post('/register', cors(corsOptions), async (req, res) => {
   const { username, password, role, firstName, lastName } = req.body;
-  console.log(req.body);
+
   if (password.length < 6) {
     return res.status(400).json({ message: 'Password less than 6 characters' });
   }
@@ -187,7 +188,7 @@ router.post('/register', cors(corsOptions), async (req, res) => {
   });
 });
 
-router.post('/login', cors(corsOptions), async (req, res) => {
+router.post('/login', loginAuth, cors(corsOptions), async (req, res) => {
   const { username, password } = req.body;
   // Check if username and password is provided
   if (!username || !password) {
@@ -197,7 +198,7 @@ router.post('/login', cors(corsOptions), async (req, res) => {
   }
   try {
     const user = await User.findOne({ username });
-    console.log(user);
+    // console.log(user);
     if (!user) {
       res.status(400).json({
         message: 'Login not successful',
@@ -229,10 +230,10 @@ router.post('/login', cors(corsOptions), async (req, res) => {
       });
     }
   } catch (error) {
-    res.status(400).json({
-      message: 'An error occurred',
-      error: error.message,
-    });
+    // res.status(400).json({
+    //   message: 'An error occurred',
+    //   error: error.message,
+    // });
   }
 });
 

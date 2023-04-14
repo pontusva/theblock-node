@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const Date = require('../model/date');
 require('dotenv').config();
 const jwtSecret = process.env.JWT_SECRET;
 
@@ -29,3 +30,17 @@ exports.adminAuth = (req, res, next) => {
     }
   });
 };
+exports.loginAuth = async (req, res, next) => {
+  const data = await Date.find().sort({ date: 1 });
+  console.log(data[0]);
+
+  if (data.some((date) => date.firstName === date.firstName)) {
+    return res.status(401).json({ message: 'Not authorized' });
+  } else {
+    next();
+  }
+
+  // console.log(req);
+};
+
+// how to compare two values that are insde an object thar inside an array of objects

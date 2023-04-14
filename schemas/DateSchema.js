@@ -14,6 +14,10 @@ const dataSchema = new mongoose.Schema({
     required: true,
     type: String,
   },
+  token: {
+    type: String,
+    required: true,
+  },
 });
 
 module.exports = dataSchema;
