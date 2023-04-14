@@ -1,6 +1,7 @@
 const express = require('express');
 const Date = require('../model/date');
 const User = require('../model/User');
+const Secret = require('../model/SecretModel');
 const FirstContact = require('../model/FirstContact');
 var cors = require('cors');
 const bcrypt = require('bcryptjs');
@@ -49,6 +50,28 @@ router.post('/firstcontact', async (req, res) => {
   });
 });
 
+router.post('/secret', async (req, res) => {
+  const { secret } = req.body;
+  await Secret.create({
+    secret,
+  }).then((user) => {
+    // const token = jwt.sign({ date }, jwtSecret, {});
+    // res.cookie('jwt', token, {
+    //   httpOnly: true,
+    // });
+    res.json({
+      secret,
+      user,
+    });
+  });
+});
+
+router.get('/secret', async (req, res) => {
+  const data = await Secret.find();
+  console.log(data);
+  res.json(data);
+});
+
 router.get('/postimage', async (req, res) => {
   try {
     const [files] = await bucket.getFiles();
@@ -88,18 +111,22 @@ router.post(
 //Post Method
 router.post('/post', cors(), async (req, res) => {
   const { date, firstName, lastName, token } = req.body;
+  console.log(req.body);
   await Date.create({
     date,
     firstName,
     lastName,
     token,
-  }).then((user) => {
-    // const token = jwt.sign({ date }, jwtSecret, {});
-    // res.cookie('jwt', token, {
-    //   httpOnly: true,
-    // });
+  }).then(async (user) => {
+    // delete the user & secret id so there can only be one reservation per account.
+    const data = await User.find({});
+    const secret = data.map((date) => date.firstName);
+    const deleteAccount = await User.deleteOne({ firstName: secret[0] });
+    const deleteSecret = await Secret.deleteOne({
+      secret: data.map((secret) => secret.secret),
+    });
+
     res.json({
-      // token,
       user,
     });
   });
@@ -118,8 +145,9 @@ router.get('/getAll', cors(corsOptions), adminAuth, async (req, res) => {
 router.get('/dates', cors(corsOptions), async (req, res) => {
   try {
     const data = await Date.find().sort({ date: 1 });
+
     res.json(
-      data.map((date) => {
+      data.map(async (date) => {
         const d = {
           date: date.date,
           id: date._id,
@@ -127,8 +155,6 @@ router.get('/dates', cors(corsOptions), async (req, res) => {
         return d;
       })
     );
-    // console.log(data);
-    // console.log(data.map((date) => date.date));
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -144,7 +170,15 @@ router.get('/adminDates', cors(corsOptions), adminAuth, async (req, res) => {
 });
 
 router.post('/register', cors(corsOptions), async (req, res) => {
-  const { username, password, role, firstName, lastName } = req.body;
+  const { username, password, role, firstName, lastName, secret } = req.body;
+
+  // match secret with secret in database
+  const data = await Secret.find();
+  const dataArray = data.map((secret) => secret.secret);
+
+  if (!dataArray.includes(secret)) {
+    return res.status(400).json({ message: 'bleat' });
+  }
 
   if (password.length < 6) {
     return res.status(400).json({ message: 'Password less than 6 characters' });
@@ -155,6 +189,7 @@ router.post('/register', cors(corsOptions), async (req, res) => {
       password: hash,
       role,
       firstName,
+      secret,
       lastName,
     })
       .then((user) => {
@@ -188,7 +223,7 @@ router.post('/register', cors(corsOptions), async (req, res) => {
   });
 });
 
-router.post('/login', loginAuth, cors(corsOptions), async (req, res) => {
+router.post('/login', cors(corsOptions), async (req, res) => {
   const { username, password } = req.body;
   // Check if username and password is provided
   if (!username || !password) {
@@ -198,7 +233,7 @@ router.post('/login', loginAuth, cors(corsOptions), async (req, res) => {
   }
   try {
     const user = await User.findOne({ username });
-    // console.log(user);
+    console.log(user);
     if (!user) {
       res.status(400).json({
         message: 'Login not successful',
@@ -237,32 +272,32 @@ router.post('/login', loginAuth, cors(corsOptions), async (req, res) => {
   }
 });
 
-router.post('/users', cors(corsOptions), async (req, res) => {
-  // console.log(req.body);
-  // res.send(req.body);
-  try {
-    const { username, role, age } = req.body;
-    // console.log(username, role, age);
-    await User.create({
-      username,
-      role,
-      age,
-    }).then((user) => {
-      const token = jwt.sign({ role }, jwtSecret, {});
-      res.cookie('jwt', token, {
-        httpOnly: true,
-      });
-      res.status(200).json({ token, role });
-    });
-  } catch {
-    (error) => {
-      res.status(400).json({
-        message: 'An error occurred',
-        error: error.message,
-      });
-    };
-  }
-});
+// router.post('/users', cors(corsOptions), async (req, res) => {
+//   // console.log(req.body);
+//   // res.send(req.body);
+//   try {
+//     const { username, role, age } = req.body;
+//     // console.log(username, role, age);
+//     await User.create({
+//       username,
+//       role,
+//       age,
+//     }).then((user) => {
+//       const token = jwt.sign({ role }, jwtSecret, {});
+//       res.cookie('jwt', token, {
+//         httpOnly: true,
+//       });
+//       res.status(200).json({ token, role });
+//     });
+//   } catch {
+//     (error) => {
+//       res.status(400).json({
+//         message: 'An error occurred',
+//         error: error.message,
+//       });
+//     };
+//   }
+// });
 // router.route('/getAll').get(adminAuth(), cors(corsOptions), getUser);
 
 // router.route('/getUser').get(cors(corsOptions), getUser);

@@ -19,6 +19,10 @@ const LoginSchema = new Mongoose.Schema({
     required: true,
     type: String,
   },
+  secret: {
+    required: true,
+    type: String,
+  },
   role: {
     required: true,
     default: 'basic',
