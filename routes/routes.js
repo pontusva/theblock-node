@@ -7,8 +7,7 @@ var cors = require('cors');
 const bcrypt = require('bcryptjs');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
-const { Storage } = require('@google-cloud/storage');
-const Multer = require('multer');
+
 const { adminAuth, loginAuth } = require('../middleware/auth');
 
 const { postUser, getUser } = require('./Auth');
@@ -21,21 +20,6 @@ var corsOptions = {
   methods: ['POST', 'GET'],
   optionsSuccessStatus: 200, // some legacy browsers (IE11, various SmartTVs) choke on 204
 };
-
-// Google CLoud Storage
-const multer = Multer({
-  storage: Multer.memoryStorage(),
-  limits: {
-    fileSize: 5 * 1024 * 1024, // No larger than 5mb, change as you need
-  },
-});
-let projectId = 'theblock-383510'; // Get this from Google Cloud
-let keyFilename = 'theblock.json'; // Get this from Google Cloud -> Credentials -> Service Accounts
-const storage = new Storage({
-  projectId,
-  keyFilename,
-});
-const bucket = storage.bucket('blockcustomerpicutres'); // Get this from Google Cloud -> Storage
 
 router.post('/firstcontact', async (req, res) => {
   const { firstName, lastName, phoneNumber, email } = req.body;
@@ -71,42 +55,6 @@ router.get('/secret', async (req, res) => {
   console.log(data);
   res.json(data);
 });
-
-router.get('/postimage', async (req, res) => {
-  try {
-    const [files] = await bucket.getFiles();
-    const objectNames = files.map((file) => file.id);
-    res.send(objectNames);
-    console.log('Success');
-  } catch (error) {
-    res.send('Error:' + error);
-  }
-});
-
-router.post(
-  '/postimage',
-  cors(corsOptions),
-  multer.single('imgfile'),
-  (req, res) => {
-    try {
-      if (req.file) {
-        console.log('File found, trying to upload...');
-        const blob = bucket.file(req.file.originalname);
-        const blobStream = blob.createWriteStream();
-
-        blobStream.on('finish', () => {
-          res.status(200).send(req.file.originalname);
-          console.log('Success');
-        });
-        blobStream.end(req.file.buffer);
-      } else throw 'error with img';
-    } catch (error) {
-      res.status(500).send(error);
-    }
-  }
-);
-
-// google cloud storage
 
 //Post Method
 router.post('/post', cors(), async (req, res) => {
