@@ -18,6 +18,10 @@ const dataSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  bookedTime: {
+    type: String,
+    required: true,
+  },
 });
 
 module.exports = dataSchema;

@@ -12,7 +12,7 @@ const LoginSchema = new Mongoose.Schema({
     minlength: 6,
   },
   firstName: {
-    required: true,
+    // required: true,
     type: String,
   },
   lastName: {

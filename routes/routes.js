@@ -58,21 +58,25 @@ router.get('/secret', async (req, res) => {
 
 //Post Method
 router.post('/post', cors(), async (req, res) => {
-  const { date, firstName, lastName, token } = req.body;
+  const { date, firstName, lastName, bookedTime, token } = req.body;
   console.log(req.body);
   await Date.create({
     date,
     firstName,
     lastName,
+    bookedTime,
     token,
   }).then(async (user) => {
     // delete the user & secret id so there can only be one reservation per account.
     const data = await User.find({});
     const secret = data.map((date) => date.firstName);
-    const deleteAccount = await User.deleteOne({ firstName: secret[0] });
-    const deleteSecret = await Secret.deleteOne({
-      secret: data.map((secret) => secret.secret),
-    });
+    console.log(secret);
+    if (secret[0] !== 'Pontus') {
+      const deleteAccount = await User.deleteOne({ firstName: secret[0] });
+      const deleteSecret = await Secret.deleteOne({
+        secret: data.map((secret) => secret.secret),
+      });
+    }
 
     res.json({
       user,
