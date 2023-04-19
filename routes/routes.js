@@ -52,36 +52,59 @@ router.post('/secret', async (req, res) => {
 
 router.get('/secret', async (req, res) => {
   const data = await Secret.find();
-  console.log(data);
+  // console.log(data);
   res.json(data);
 });
 
 //Post Method
 router.post('/post', cors(), async (req, res) => {
-  const { date, firstName, lastName, bookedTime, token } = req.body;
-  console.log(req.body);
-  await Date.create({
-    date,
-    firstName,
-    lastName,
-    bookedTime,
-    token,
-  }).then(async (user) => {
-    // delete the user & secret id so there can only be one reservation per account.
-    const data = await User.find({});
-    const secret = data.map((date) => date.firstName);
-    console.log(secret);
-    if (secret[0] !== 'Pontus') {
-      const deleteAccount = await User.deleteOne({ firstName: secret[0] });
-      const deleteSecret = await Secret.deleteOne({
-        secret: data.map((secret) => secret.secret),
+  const { date, firstName, lastName, bookedTime, token, fullBooked } = req.body;
+  console.log(req.body.firstName);
+  const createDocument = async () => {
+    const idFinder = await Date.find({}, {});
+
+    // checks if the date is already in the database if not it creates a new document.
+    const updateDate = idFinder.map((date) => date.date.split('T')[0]);
+    const bool = updateDate.includes(date.split('T')[0]);
+
+    if (!bool) {
+      await Date.create({
+        date: date.split('T')[0],
+        lastName,
+        token,
+        fullBooked,
       });
     }
+  };
 
-    res.json({
-      user,
+  const dateDate = async () => {
+    // updates the document with the booked time and first name.
+    try {
+      await Date.updateOne(
+        { date: date.split('T')[0] },
+        { $push: { bookedTime: bookedTime, firstName: firstName } }
+      );
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const fullyBooked = async () => {
+    // checks if the date is fully booked and updates the document.
+    const booked = await Date.find({ date: date.split('T')[0] }, { _id: 0 });
+    const boole = booked[0]?.bookedTime.length >= 2;
+    if (boole) {
+      await Date.updateOne({ date: date.split('T')[0] }, { fullBooked: true });
+    }
+  };
+
+  // promises to make sure the functions are executed in the correct order(?)
+  createDocument()
+    .then(dateDate)
+    .then(fullyBooked)
+    .catch((err) => {
+      console.log(err);
     });
-  });
 });
 
 //Get all Method
@@ -97,16 +120,21 @@ router.get('/getAll', cors(corsOptions), adminAuth, async (req, res) => {
 router.get('/dates', cors(corsOptions), async (req, res) => {
   try {
     const data = await Date.find().sort({ date: 1 });
-
+    // console.log(data);
     res.json(
-      data.map(async (date) => {
-        const d = {
+      data.map((date) => {
+        const returnDate = {
           date: date.date,
-          id: date._id,
+          firstName: date.firstName,
+          lastName: date.lastName,
+          bookedTime: date.bookedTime,
+          fullBooked: date.fullBooked,
         };
-        return d;
+
+        return returnDate;
       })
     );
+    // );
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -128,9 +156,9 @@ router.post('/register', cors(corsOptions), async (req, res) => {
   const data = await Secret.find();
   const dataArray = data.map((secret) => secret.secret);
 
-  if (!dataArray.includes(secret)) {
-    return res.status(400).json({ message: 'bleat' });
-  }
+  // if (!dataArray.includes(secret)) {
+  //   return res.status(400).json({ message: 'no secret' });
+  // }
 
   if (password.length < 6) {
     return res.status(400).json({ message: 'Password less than 6 characters' });
@@ -185,7 +213,7 @@ router.post('/login', cors(corsOptions), async (req, res) => {
   }
   try {
     const user = await User.findOne({ username });
-    console.log(user);
+    // console.log(user);
     if (!user) {
       res.status(400).json({
         message: 'Login not successful',

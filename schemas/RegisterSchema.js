@@ -11,10 +11,12 @@ const LoginSchema = new Mongoose.Schema({
     type: String,
     minlength: 6,
   },
-  firstName: {
-    // required: true,
-    type: String,
-  },
+  firstName: [
+    {
+      // required: true,
+      type: String,
+    },
+  ],
   lastName: {
     required: true,
     type: String,

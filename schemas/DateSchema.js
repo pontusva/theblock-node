@@ -4,12 +4,14 @@ const dataSchema = new mongoose.Schema({
   date: {
     required: true,
     type: String,
-    unique: true,
+    // unique: true,
   },
-  firstName: {
-    required: true,
-    type: String,
-  },
+  firstName: [
+    {
+      required: true,
+      type: String,
+    },
+  ],
   lastName: {
     required: true,
     type: String,
@@ -18,8 +20,11 @@ const dataSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  bookedTime: {
-    type: String,
+  bookedTime: [String],
+
+  fullBooked: {
+    type: Boolean,
+    default: false,
     required: true,
   },
 });
