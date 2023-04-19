@@ -93,17 +93,18 @@ router.post('/post', cors(), async (req, res) => {
     // checks if the date is fully booked and updates the document.
     const booked = await Date.find({ date: date.split('T')[0] }, { _id: 0 });
     const boole = booked[0]?.bookedTime.length >= 2;
+
     if (boole) {
       await Date.updateOne({ date: date.split('T')[0] }, { fullBooked: true });
     }
   };
-
-  // promises to make sure the functions are executed in the correct order(?)
   createDocument()
     .then(dateDate)
     .then(fullyBooked)
-    .catch((err) => {
-      console.log(err);
+    .then(async (user) => {
+      res.json({
+        user,
+      });
     });
 });
 
