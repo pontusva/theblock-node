@@ -58,8 +58,17 @@ router.get('/secret', async (req, res) => {
 
 //Post Method
 router.post('/post', cors(), async (req, res) => {
-  const { date, firstName, lastName, bookedTime, token, fullBooked } = req.body;
-  console.log(req.body.firstName);
+  const {
+    date,
+    firstName,
+    lastName,
+    bookedTime,
+    token,
+    fullBooked,
+    // halfBooked,
+  } = req.body;
+
+  //  function to create a new document if the date is not in the database.
   const createDocument = async () => {
     const idFinder = await Date.find({}, {});
 
@@ -101,8 +110,8 @@ router.post('/post', cors(), async (req, res) => {
   createDocument()
     .then(dateDate)
     .then(fullyBooked)
-    .then(async (user) => {
-      res.json({
+    .then((user) => {
+      res.status(200).json({
         user,
       });
     });
@@ -125,6 +134,7 @@ router.get('/dates', cors(corsOptions), async (req, res) => {
     res.json(
       data.map((date) => {
         const returnDate = {
+          id: date._id,
           date: date.date,
           firstName: date.firstName,
           lastName: date.lastName,
