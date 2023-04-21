@@ -58,15 +58,7 @@ router.get('/secret', async (req, res) => {
 
 //Post Method
 router.post('/post', cors(), async (req, res) => {
-  const {
-    date,
-    firstName,
-    lastName,
-    bookedTime,
-    token,
-    fullBooked,
-    // halfBooked,
-  } = req.body;
+  const { date, firstName, lastName, bookedTime, token, fullBooked } = req.body;
 
   //  function to create a new document if the date is not in the database.
   const createDocument = async () => {
@@ -98,6 +90,22 @@ router.post('/post', cors(), async (req, res) => {
     }
   };
 
+  const halfBooked = async () => {
+    // checks if the date is half booked and updates the document.
+    console.log(bookedTime, 'bookedTime');
+    const booked = await Date.find({ date: date.split('T')[0] }, { _id: 0 });
+    const arrOfBooked = booked.map((full) => full.bookedTime)[0];
+
+    arrOfBooked.forEach(async (arr) => {
+      if (arr === '09:00 - 12:00' || arr === '9:00 - 15:00') {
+        await Date.updateOne(
+          { date: date.split('T')[0] },
+          { halfBooked: true, halfBookedTime: bookedTime }
+        );
+      }
+    });
+  };
+
   const fullyBooked = async () => {
     // checks if the date is fully booked and updates the document.
     const booked = await Date.find({ date: date.split('T')[0] }, { _id: 0 });
@@ -110,6 +118,7 @@ router.post('/post', cors(), async (req, res) => {
   createDocument()
     .then(dateDate)
     .then(fullyBooked)
+    .then(halfBooked)
     .then((user) => {
       res.status(200).json({
         user,
@@ -140,12 +149,26 @@ router.get('/dates', cors(corsOptions), async (req, res) => {
           lastName: date.lastName,
           bookedTime: date.bookedTime,
           fullBooked: date.fullBooked,
+          halfBooked: date.halfBooked,
+          halfBookedTime: date.halfBookedTime,
         };
 
         return returnDate;
       })
     );
     // );
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+router.get('/datesbool', cors(corsOptions), async (req, res) => {
+  try {
+    const data = await Date.find(
+      {},
+      { _id: 1, date: 1, halfBooked: 1, bookedTime: 1 }
+    );
+    res.send(data);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

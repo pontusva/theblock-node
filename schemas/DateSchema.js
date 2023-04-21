@@ -27,6 +27,15 @@ const dataSchema = new mongoose.Schema({
     default: false,
     required: true,
   },
+  halfBooked: {
+    type: Boolean,
+    default: false,
+    required: true,
+  },
+  halfBookedTime: {
+    type: String,
+    // required: true,
+  },
 });
 
 module.exports = dataSchema;
