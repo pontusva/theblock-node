@@ -1,4 +1,4 @@
-const Mongoose = require('mongoose');
+const Mongoose = require('mongoose')
 
 const LoginSchema = new Mongoose.Schema({
   username: {
@@ -30,6 +30,6 @@ const LoginSchema = new Mongoose.Schema({
     default: 'basic',
     type: String,
   },
-});
+})
 
-module.exports = LoginSchema;
+module.exports = LoginSchema

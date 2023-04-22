@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+const mongoose = require('mongoose')
 
 const firstContactSchema = new mongoose.Schema({
   firstName: {
@@ -18,6 +18,6 @@ const firstContactSchema = new mongoose.Schema({
     required: true,
     type: String,
   },
-});
+})
 
-module.exports = firstContactSchema;
+module.exports = firstContactSchema

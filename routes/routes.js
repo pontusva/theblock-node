@@ -1,41 +1,41 @@
-const express = require('express');
-const Date = require('../model/date');
-const User = require('../model/User');
-const Secret = require('../model/SecretModel');
-const FirstContact = require('../model/FirstContact');
-var cors = require('cors');
-const bcrypt = require('bcryptjs');
-const router = express.Router();
-const jwt = require('jsonwebtoken');
+const express = require('express')
+const Date = require('../model/date')
+const User = require('../model/User')
+const Secret = require('../model/SecretModel')
+const FirstContact = require('../model/FirstContact')
+var cors = require('cors')
+const bcrypt = require('bcryptjs')
+const router = express.Router()
+const jwt = require('jsonwebtoken')
 
-const { adminAuth, loginAuth } = require('../middleware/auth');
+const { adminAuth, loginAuth } = require('../middleware/auth')
 
-const { postUser, getUser } = require('./Auth');
-require('dotenv').config();
+const { postUser, getUser } = require('./Auth')
+require('dotenv').config()
 
-const jwtSecret = process.env.JWT_SECRET;
+const jwtSecret = process.env.JWT_SECRET
 
 var corsOptions = {
   origin: true,
   methods: ['POST', 'GET'],
   optionsSuccessStatus: 200, // some legacy browsers (IE11, various SmartTVs) choke on 204
-};
+}
 
 router.post('/firstcontact', async (req, res) => {
-  const { firstName, lastName, phoneNumber, email } = req.body;
+  const { firstName, lastName, phoneNumber, email } = req.body
   await FirstContact.create({
     firstName,
     lastName,
     phoneNumber,
     email,
-  });
+  })
   res.json({
     message: 'Success',
-  });
-});
+  })
+})
 
 router.post('/secret', async (req, res) => {
-  const { secret } = req.body;
+  const { secret } = req.body
   await Secret.create({
     secret,
   }).then((user) => {
@@ -46,27 +46,27 @@ router.post('/secret', async (req, res) => {
     res.json({
       secret,
       user,
-    });
-  });
-});
+    })
+  })
+})
 
 router.get('/secret', async (req, res) => {
-  const data = await Secret.find();
+  const data = await Secret.find()
   // console.log(data);
-  res.json(data);
-});
+  res.json(data)
+})
 
 //Post Method
-router.post('/post', cors(), async (req, res) => {
-  const { date, firstName, lastName, bookedTime, token, fullBooked } = req.body;
+router.post('/dates', cors(), async (req, res) => {
+  const { date, firstName, lastName, bookedTime, token, fullBooked } = req.body
 
   //  function to create a new document if the date is not in the database.
   const createDocument = async () => {
-    const idFinder = await Date.find({}, {});
+    const idFinder = await Date.find({}, {})
 
     // checks if the date is already in the database if not it creates a new document.
-    const updateDate = idFinder.map((date) => date.date.split('T')[0]);
-    const bool = updateDate.includes(date.split('T')[0]);
+    const updateDate = idFinder.map((date) => date.date.split('T')[0])
+    const bool = updateDate.includes(date.split('T')[0])
 
     if (!bool) {
       await Date.create({
@@ -74,9 +74,9 @@ router.post('/post', cors(), async (req, res) => {
         lastName,
         token,
         fullBooked,
-      });
+      })
     }
-  };
+  }
 
   const dateDate = async () => {
     // updates the document with the booked time and first name.
@@ -84,37 +84,37 @@ router.post('/post', cors(), async (req, res) => {
       await Date.updateOne(
         { date: date.split('T')[0] },
         { $push: { bookedTime: bookedTime, firstName: firstName } }
-      );
+      )
     } catch (error) {
-      console.error(error);
+      console.error(error)
     }
-  };
+  }
 
   const halfBooked = async () => {
     // checks if the date is half booked and updates the document.
-    console.log(bookedTime, 'bookedTime');
-    const booked = await Date.find({ date: date.split('T')[0] }, { _id: 0 });
-    const arrOfBooked = booked.map((full) => full.bookedTime)[0];
+    console.log(bookedTime, 'bookedTime')
+    const booked = await Date.find({ date: date.split('T')[0] }, { _id: 0 })
+    const arrOfBooked = booked.map((full) => full.bookedTime)[0]
 
     arrOfBooked.forEach(async (arr) => {
       if (arr === '09:00 - 12:00' || arr === '9:00 - 15:00') {
         await Date.updateOne(
           { date: date.split('T')[0] },
           { halfBooked: true, halfBookedTime: bookedTime }
-        );
+        )
       }
-    });
-  };
+    })
+  }
 
   const fullyBooked = async () => {
     // checks if the date is fully booked and updates the document.
-    const booked = await Date.find({ date: date.split('T')[0] }, { _id: 0 });
-    const boole = booked[0]?.bookedTime.length >= 2;
+    const booked = await Date.find({ date: date.split('T')[0] }, { _id: 0 })
+    const boole = booked[0]?.bookedTime.length >= 2
 
     if (boole) {
-      await Date.updateOne({ date: date.split('T')[0] }, { fullBooked: true });
+      await Date.updateOne({ date: date.split('T')[0] }, { fullBooked: true })
     }
-  };
+  }
   createDocument()
     .then(dateDate)
     .then(fullyBooked)
@@ -122,23 +122,23 @@ router.post('/post', cors(), async (req, res) => {
     .then((user) => {
       res.status(200).json({
         user,
-      });
-    });
-});
+      })
+    })
+})
 
 //Get all Method
 router.get('/getAll', cors(corsOptions), adminAuth, async (req, res) => {
   try {
-    const data = await User.find().sort({ username: 1 });
-    res.json(data);
+    const data = await User.find().sort({ username: 1 })
+    res.json(data)
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: error.message })
   }
-});
+})
 
 router.get('/dates', cors(corsOptions), async (req, res) => {
   try {
-    const data = await Date.find().sort({ date: 1 });
+    const data = await Date.find().sort({ date: 1 })
     // console.log(data);
     res.json(
       data.map((date) => {
@@ -151,51 +151,51 @@ router.get('/dates', cors(corsOptions), async (req, res) => {
           fullBooked: date.fullBooked,
           halfBooked: date.halfBooked,
           halfBookedTime: date.halfBookedTime,
-        };
+        }
 
-        return returnDate;
+        return returnDate
       })
-    );
+    )
     // );
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: error.message })
   }
-});
+})
 
 router.get('/datesbool', cors(corsOptions), async (req, res) => {
   try {
     const data = await Date.find(
       {},
       { _id: 1, date: 1, halfBooked: 1, bookedTime: 1 }
-    );
-    res.send(data);
+    )
+    res.send(data)
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: error.message })
   }
-});
+})
 
 router.get('/adminDates', cors(corsOptions), adminAuth, async (req, res) => {
   try {
-    const data = await Date.find().sort({ date: 1 });
-    res.json(data);
+    const data = await Date.find().sort({ date: 1 })
+    res.json(data)
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: error.message })
   }
-});
+})
 
 router.post('/register', cors(corsOptions), async (req, res) => {
-  const { username, password, role, firstName, lastName, secret } = req.body;
+  const { username, password, role, firstName, lastName, secret } = req.body
 
   // match secret with secret in database
-  const data = await Secret.find();
-  const dataArray = data.map((secret) => secret.secret);
+  const data = await Secret.find()
+  const dataArray = data.map((secret) => secret.secret)
 
   // if (!dataArray.includes(secret)) {
   //   return res.status(400).json({ message: 'no secret' });
   // }
 
   if (password.length < 6) {
-    return res.status(400).json({ message: 'Password less than 6 characters' });
+    return res.status(400).json({ message: 'Password less than 6 characters' })
   }
   bcrypt.hash(password, 10).then(async (hash) => {
     await User.create({
@@ -207,22 +207,22 @@ router.post('/register', cors(corsOptions), async (req, res) => {
       lastName,
     })
       .then((user) => {
-        const maxAge = 3 * 60 * 60;
+        const maxAge = 3 * 60 * 60
         const token = jwt.sign(
           { id: user._id, username, role: user.role },
           jwtSecret,
           {
             expiresIn: maxAge, // 3hrs in sec
           }
-        );
+        )
         res.cookie('jwt', token, {
           httpOnly: true,
           maxAge: maxAge * 1000, // 3hrs in ms
-        });
+        })
         res.json({
           token,
           user,
-        });
+        })
         // res.status(201).json({
         //   message: 'User successfully created',
         //   user: user._id,
@@ -233,50 +233,50 @@ router.post('/register', cors(corsOptions), async (req, res) => {
           message: 'User not successful created',
           error: error.message,
         })
-      );
-  });
-});
+      )
+  })
+})
 
 router.post('/login', cors(corsOptions), async (req, res) => {
-  const { username, password } = req.body;
+  const { username, password } = req.body
   // Check if username and password is provided
   if (!username || !password) {
     return res.status(400).json({
       message: 'Username or Password not present',
-    });
+    })
   }
   try {
-    const user = await User.findOne({ username });
+    const user = await User.findOne({ username })
     // console.log(user);
     if (!user) {
       res.status(400).json({
         message: 'Login not successful',
         error: 'User not found',
-      });
+      })
     } else {
       // comparing given password with hashed password
       bcrypt.compare(password, user.password).then(function (result) {
         if (result) {
-          const maxAge = 3 * 60 * 60;
+          const maxAge = 3 * 60 * 60
           const token = jwt.sign({ id: user.id, role: user.role }, jwtSecret, {
             expiresIn: maxAge, // 3hrs in sec
-          });
+          })
           res.cookie('jwt', token, {
             httpOnly: true,
             maxAge: maxAge * 1000, // 3hrs in ms
-          });
+          })
           res.json({
             token,
             user,
-          });
+          })
           // res.status(201).json({
           //   message: 'User successfully Logged in',
           //   user: user._id,
           // });
         } else {
-          res.status(400).json({ message: 'Login not succesful' });
+          res.status(400).json({ message: 'Login not succesful' })
         }
-      });
+      })
     }
   } catch (error) {
     // res.status(400).json({
@@ -284,7 +284,7 @@ router.post('/login', cors(corsOptions), async (req, res) => {
     //   error: error.message,
     // });
   }
-});
+})
 
 // router.post('/users', cors(corsOptions), async (req, res) => {
 //   // console.log(req.body);
@@ -318,26 +318,26 @@ router.post('/login', cors(corsOptions), async (req, res) => {
 
 router.get('/admin', adminAuth, cors(corsOptions), async (req, res) => {
   try {
-    const data = await Model.find().sort({ date: 1 });
-    res.json(data);
+    const data = await Model.find().sort({ date: 1 })
+    res.json(data)
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: error.message })
   }
-});
+})
 
 //Get by ID Method
 router.get('/getOne/:id', (req, res) => {
-  res.send(req.params.id);
-});
+  res.send(req.params.id)
+})
 
 //Update by ID Method
 router.patch('/update/:id', (req, res) => {
-  res.send('Update by ID API');
-});
+  res.send('Update by ID API')
+})
 
 //Delete by ID Method
 router.delete('/delete/:id', (req, res) => {
-  res.send('Delete by ID API');
-});
+  res.send('Delete by ID API')
+})
 
-module.exports = router;
+module.exports = router

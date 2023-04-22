@@ -1,10 +1,10 @@
 // const Login = require('../model/loginModel');
 // const { dbModelUser } = require('../index/dbModelUser');
-const { adminAuth } = require('../middleware/auth');
-const Login = require('../model/User');
+const { adminAuth } = require('../middleware/auth')
+const Login = require('../model/User')
 
 exports.postUser = async (req, res) => {
-  res.send('Post User API');
+  res.send('Post User API')
   // const { username } = req.body;
   // try {
   //   console.log(username);
@@ -26,18 +26,18 @@ exports.postUser = async (req, res) => {
   //     httpOnly: true,
   //     maxAge: maxAge * 1000, // 3hrs in ms
   //   });
-  res.json({ loger });
+  res.json({ loger })
   // });
-};
+}
 
 exports.getsUser = (req, res) => {
   try {
-    res.send('Get User API');
+    res.send('Get User API')
   } catch {
-    (error) => {
+    ;(error) => {
       res
         .status(400)
-        .json({ message: 'An error occurred', error: error.message });
-    };
+        .json({ message: 'An error occurred', error: error.message })
+    }
   }
-};
+}

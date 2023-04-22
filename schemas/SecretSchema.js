@@ -1,4 +1,4 @@
-const Mongoose = require('mongoose');
+const Mongoose = require('mongoose')
 
 const LoginSchema = new Mongoose.Schema({
   secret: {
@@ -6,6 +6,6 @@ const LoginSchema = new Mongoose.Schema({
     type: String,
     unique: true,
   },
-});
+})
 
-module.exports = LoginSchema;
+module.exports = LoginSchema
